@@ -1,0 +1,27 @@
+HOME = ENV.fetch('HOME', '~')
+BOX_DIR = File.join(HOME, '.vagrant.d', 'boxes', 'lyraphase-runner-VAGRANTSLASH-macos-monterey-base')
+BOX_INCLUDE_DIR = File.join(BOX_DIR, '0', 'libvirt', 'include')
+
+puts "HOME: #{HOME}"
+puts "BOX_DIR: #{BOX_DIR}"
+puts "BOX_INCLUDE_DIR: #{BOX_INCLUDE_DIR}"
+
+Vagrant.configure("2") do |c|
+  c.berkshelf.enabled = false if Vagrant.has_plugin?("vagrant-berkshelf")
+  c.vm.box = "lyraphase-runner/macos-monterey-base"
+  c.vm.hostname = "macos-12-1.vagrantup.com"
+  c.vm.boot_timeout = 1200
+
+  #c.ssh.proxy_command = 'ssh -t -T saturn.internal exec nc -q0 %h %p'
+
+  c.vm.synced_folder ".", "/vagrant", disabled: true
+  c.vm.provider :libvirt do |p|
+    p.name = "macos-monterey-1201-default"
+    p.uri = 'qemu:///session'
+    p.system_uri = 'qemu:///system'
+
+    p.loader = File.join(BOX_INCLUDE_DIR, 'OVMF_CODE.4m.fd')
+    p.nvram_template = File.join(BOX_INCLUDE_DIR, 'OVMF_VARS.4m.fd')
+    #p.customize ["modifyvm", :id, "--audio", "none"]
+  end
+end
